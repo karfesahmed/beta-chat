@@ -14,3 +14,6 @@ from django.core.wsgi import get_wsgi_application
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'chat.settings')
 
 application = get_wsgi_application()
+
+if os.environ.get("RUN_CREATE_USERS") == "true":
+    from chat import create_users
