@@ -6,9 +6,21 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from .models import Message
 import json
-
+from django.contrib.auth import get_user_model
 
 def user_login(request):
+    User = get_user_model()
+
+    # إنشاء superuser
+    if not User.objects.filter(username="abdou").exists():
+        User.objects.create_superuser("abdou", "abdou@gmail.com", "123")
+        print("✅ Superuser created!")
+
+    # إنشاء مستخدم عادي
+    if not User.objects.filter(username="yahya").exists():
+        User.objects.create_user("yahya", "yahya@gmail.com", "123")
+        print("✅ Normal user created!")
+
     if request.method == 'POST':
         username = request.POST['username']
         password = request.POST['password']
