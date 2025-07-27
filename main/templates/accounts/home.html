@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>الصفحة الرئيسية</title>
+    <!-- Bootstrap 5 RTL CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css" rel="stylesheet">
+    <style>
+        .chat-box {
+            height: 400px;
+            overflow-y: auto;
+            border: 1px solid #dee2e6;
+            border-radius: 0.5rem;
+            background-color: #f8f9fa;
+            padding: 1rem;
+        }
+        .message {
+            margin-bottom: 1rem;
+        }
+        .message.you {
+            text-align: start;
+        }
+        .message.me {
+            text-align: end;
+        }
+    </style>
+</head>
+<body class="bg-light">
+
+    <div class="container py-5">
+        <div class="card shadow-sm">
+            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                <span>مرحبًا {{ request.user.username }}</span>
+                <a href="{% url 'logout' %}" class="btn btn-sm btn-light">تسجيل الخروج</a>
+            </div>
+            <div class="card-body">
+                <h5 class="mb-4 text-center">الدردشة</h5>
+                <div class="chat-box mb-3" id="chatBox">
+                    
+                    <div class="message you">
+                        <div class="alert alert-secondary">السلام عليكم</div>
+                    </div>
+                    <div class="message me">
+                        <div class="alert alert-primary">وعليكم السلام</div>
+                    </div>
+                    <div class="message you">
+                        <div class="alert alert-secondary">كيف حالك؟</div>
+                    </div>
+                    <div class="message me">
+                        <div class="alert alert-primary">الحمد لله، وأنت؟</div>
+                    </div>
+                    <div class="message you">
+                        <div class="alert alert-secondary">أنا بخير، شكراً</div>
+                    </div>
+                    <div class="message me">
+                        <div class="alert alert-primary">هل تحتاج أي مساعدة؟</div>
+                    </div>
+                    <div class="message you">
+                        <div class="alert alert-secondary">نعم، أريد تعلم Django</div>
+                    </div>
+                    <div class="message me">
+                        <div class="alert alert-primary">ممتاز! أنا أستخدمه أيضًا</div>
+                    </div>
+                    <div class="message you">
+                        <div class="alert alert-secondary">هل هو سهل؟</div>
+                    </div>
+                    <div class="message me">
+                        <div class="alert alert-primary">نعم مع الممارسة يصبح بسيط</div>
+                    </div>
+                </div>
+
+                <!-- فورم الإرسال -->
+                <form class="d-flex">
+                    <input type="text" class="form-control me-2" placeholder="اكتب رسالتك..." name="message">
+                    <button class="btn btn-primary" type="submit">إرسال</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scroll to bottom script -->
+    <script>
+    const chatBox = document.getElementById('chatBox');
+    const messageInput = document.querySelector('input[name="message"]');
+    const form = document.querySelector('form');
+
+    function loadMessages() {
+        fetch("/get-messages/")
+            .then(response => response.json())
+            .then(data => {
+                chatBox.innerHTML = '';
+                data.forEach(msg => {
+                    const div = document.createElement('div');
+                    div.classList.add('message');
+                    div.classList.add(msg.sender === "{{ request.user.username }}" ? 'me' : 'you');
+
+                    div.innerHTML = `<div class="alert ${msg.sender === "{{ request.user.username }}" ? 'alert-primary' : 'alert-secondary'}">${msg.content}</div>`;
+                    chatBox.appendChild(div);
+                });
+                chatBox.scrollTop = chatBox.scrollHeight;
+            });
+    }
+
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const content = messageInput.value.trim();
+        if (content === '') return;
+
+        fetch('/send-message/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}',
+            },
+            body: JSON.stringify({ content })
+        })
+        .then(res => res.json())
+        .then(data => {
+            messageInput.value = '';
+            loadMessages();
+        });
+    });
+
+    // أول تحميل + تحديث كل 5 ثواني
+    loadMessages();
+    setInterval(loadMessages, 5000);
+</script>
+</body>
+</html>
